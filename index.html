@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>책갈피 · 나의 독서 기록 아카이브</title>
+  <meta name="description" content="읽은 책과 읽고 있는 책을 한곳에 모아 메모·별점·통계로 관리하는 개인 독서 아카이브" />
+
+  <!-- 글꼴: 명조 계열 표제 + Pretendard 본문 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <!-- ===== 헤더 (로그인 상태일 때만 내비 노출) ===== -->
+  <header class="site-header" id="siteHeader" hidden>
+    <div class="wrap header-inner">
+      <a class="brand" href="#/library">
+        <span class="brand-mark">❦</span>
+        <span class="brand-text">책갈피</span>
+      </a>
+      <nav class="main-nav" id="mainNav">
+        <a href="#/library" data-nav="library">내 서재</a>
+        <a href="#/search" data-nav="search">책 검색</a>
+      </nav>
+      <div class="header-user">
+        <span class="user-name" id="userName"></span>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">로그아웃</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== 화면이 렌더링되는 영역 ===== -->
+  <main id="view" class="view"></main>
+
+  <!-- ===== 토스트 알림 ===== -->
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <!-- ===== 모달 (확인 / 상태 선택 등) ===== -->
+  <div class="modal-backdrop" id="modalBackdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" id="modal"></div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>책갈피 · 개인 독서 아카이브 데모 — 데이터는 이 브라우저에만 저장됩니다.</p>
+    </div>
+  </footer>
+
+  <!-- 스크립트는 순서가 중요합니다: 데이터 → API → 인증 → 앱 -->
+  <script src="assets/js/store.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

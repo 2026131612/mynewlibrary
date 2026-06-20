@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>책갈피 · 나의 독서 기록 아카이브</title>
+  <meta name="description" content="읽은 책과 읽고 있는 책을 한곳에 모아 메모·별점·통계로 관리하는 개인 독서 아카이브" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+  <style>
+/* =========================================================
+   책갈피 · 독서 기록 아카이브  —  스타일시트
+   디자인 방향: '독서 일지 / 도서 카드' 감성
+   - 종이(paper) 바탕 + 잉크(ink) 글자 + 필사 느낌의 ochre 강조색
+   - 표제는 명조(Nanum Myeongjo), 본문은 Pretendard
+   - 책의 '상태'(읽고 싶은/읽는 중/완독)에 의미 색을 부여
+   ========================================================= */
+
+:root {
+  /* 색상 토큰 */
+  --ink:        #20283a;   /* 본문 글자 · 진한 잉크 네이비 */
+  --ink-soft:   #59617a;   /* 보조 글자 */
+  --ink-faint:  #8b91a4;   /* 흐린 글자 */
+  --paper:      #faf8f3;   /* 종이 바탕 */
+  --paper-2:    #f2ede2;   /* 패널 바탕 */
+  --paper-3:    #ece5d6;   /* 더 진한 패널 */
+  --line:       #e2dac9;   /* 가는 구분선 */
+  --line-strong:#d3c8b1;
+
+  --gold:       #a9802f;   /* 강조색(필사 ochre) · 브랜드 */
+  --gold-soft:  #c4a05a;
+  --gold-tint:  #f4ecd9;
+
+  --want:       #5b7a99;   /* 읽고 싶은 · 슬레이트 블루 */
+  --reading:    #c0852a;   /* 읽는 중 · 호박색 */
+  --done:       #5f7d54;   /* 완독 · 세이지 그린 */
+
+  --star:       #c9962f;
+  --danger:     #a8443a;
+  --danger-tint:#f6e4e1;
+
+  --radius:     10px;
+  --radius-sm:  7px;
+  --shadow:     0 1px 2px rgba(32,40,58,.06), 0 8px 24px rgba(32,40,58,.07);
+  --shadow-sm:  0 1px 2px rgba(32,40,58,.07);
+
+  --serif: 'Nanum Myeongjo', serif;
+  --sans:  'Pretendard', 'Noto Sans KR', system-ui, sans-serif;
+}
+
+/* ===== 리셋 ===== */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--paper);
+  /* 아주 옅은 종이결 */
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(169,128,47,.035), transparent 38%),
+    radial-gradient(circle at 88% 82%, rgba(91,122,153,.035), transparent 40%);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+h1, h2, h3, h4 { font-family: var(--serif); font-weight: 800; line-height: 1.25; color: var(--ink); margin: 0; }
+a { color: var(--gold); text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; font-size: 1rem; color: var(--ink); }
+img { display: block; max-width: 100%; }
+
+.wrap { width: min(1080px, 92vw); margin: 0 auto; }
+.view { flex: 1 0 auto; padding: 36px 0 64px; }
+
+/* ===== 헤더 ===== */
+.site-header {
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 30;
+  backdrop-filter: saturate(1.1) blur(2px);
+}
+.header-inner { display: flex; align-items: center; gap: 28px; height: 64px; }
+.brand { display: flex; align-items: center; gap: 9px; color: var(--ink); }
+.brand-mark { color: var(--gold); font-size: 1.45rem; line-height: 1; }
+.brand-text { font-family: var(--serif); font-weight: 800; font-size: 1.35rem; letter-spacing: .02em; }
+.main-nav { display: flex; gap: 6px; margin-right: auto; }
+.main-nav a {
+  color: var(--ink-soft); padding: 7px 14px; border-radius: 999px;
+  font-weight: 500; font-size: .95rem; transition: background .15s, color .15s;
+}
+.main-nav a:hover { background: var(--paper-2); color: var(--ink); }
+.main-nav a.active { background: var(--ink); color: var(--paper); }
+.header-user { display: flex; align-items: center; gap: 12px; }
+.user-name { font-size: .9rem; color: var(--ink-soft); }
+.user-name b { color: var(--ink); font-weight: 700; }
+
+/* ===== 버튼 ===== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+  padding: 10px 18px; font-size: .95rem; font-weight: 600;
+  background: var(--paper-2); color: var(--ink);
+  transition: transform .08s, background .15s, border-color .15s, box-shadow .15s;
+}
+.btn:hover { background: var(--paper-3); }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--gold); color: #fff; }
+.btn-primary:hover { background: #976f24; }
+.btn-ink { background: var(--ink); color: var(--paper); }
+.btn-ink:hover { background: #2c3650; }
+.btn-ghost { background: transparent; border-color: var(--line-strong); color: var(--ink-soft); }
+.btn-ghost:hover { background: var(--paper-2); color: var(--ink); }
+.btn-danger { background: transparent; border-color: var(--danger); color: var(--danger); }
+.btn-danger:hover { background: var(--danger-tint); }
+.btn-sm { padding: 6px 12px; font-size: .85rem; }
+.btn-block { width: 100%; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ===== 폼 ===== */
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: .85rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+.input, .select, .textarea {
+  width: 100%; padding: 11px 13px; background: #fff;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  transition: border-color .15s, box-shadow .15s;
+}
+.input:focus, .select:focus, .textarea:focus {
+  outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(169,128,47,.15);
+}
+.textarea { resize: vertical; min-height: 90px; line-height: 1.65; }
+.field-error { color: var(--danger); font-size: .82rem; margin-top: 6px; min-height: 1em; }
+.hint { color: var(--ink-faint); font-size: .82rem; }
+
+/* ===== 인증(로그인/회원가입) 화면 ===== */
+.auth-screen { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 160px); }
+.auth-card {
+  width: min(420px, 92vw); background: #fff; border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 38px 34px;
+}
+.auth-brand { text-align: center; margin-bottom: 26px; }
+.auth-brand .brand-mark { font-size: 2.1rem; }
+.auth-brand h1 { font-size: 1.7rem; margin-top: 6px; }
+.auth-brand p { color: var(--ink-soft); font-size: .92rem; margin: 6px 0 0; }
+.auth-tabs { display: flex; gap: 4px; background: var(--paper-2); border-radius: 999px; padding: 4px; margin-bottom: 24px; }
+.auth-tabs button {
+  flex: 1; border: none; background: transparent; padding: 9px; border-radius: 999px;
+  font-weight: 600; color: var(--ink-soft); transition: background .15s, color .15s;
+}
+.auth-tabs button.active { background: #fff; color: var(--ink); box-shadow: var(--shadow-sm); }
+.auth-switch { text-align: center; font-size: .88rem; color: var(--ink-soft); margin-top: 18px; }
+.auth-switch button { background: none; border: none; color: var(--gold); font-weight: 700; padding: 0; }
+
+/* ===== 페이지 헤더 ===== */
+.page-head { margin-bottom: 26px; }
+.page-head .eyebrow { font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+.page-head h1 { font-size: 2rem; margin-top: 4px; }
+.page-head p { color: var(--ink-soft); margin: 6px 0 0; }
+
+/* ===== 통계 스트립 ===== */
+.stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 26px; }
+.stat {
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px 16px; box-shadow: var(--shadow-sm);
+}
+.stat .num { font-family: var(--serif); font-size: 1.7rem; font-weight: 800; line-height: 1; }
+.stat .lbl { font-size: .8rem; color: var(--ink-soft); margin-top: 7px; }
+.stat.s-want  .num { color: var(--want); }
+.stat.s-reading .num { color: var(--reading); }
+.stat.s-done  .num { color: var(--done); }
+.stat.s-star  .num { color: var(--star); }
+
+/* ===== 도구 막대 (검색/정렬/필터) ===== */
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 14px; margin-bottom: 22px; box-shadow: var(--shadow-sm);
+}
+.toolbar .search-box { flex: 1 1 220px; position: relative; }
+.toolbar .search-box .input { padding-left: 38px; }
+.toolbar .search-box::before {
+  content: "🔍"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  font-size: .9rem; opacity: .5;
+}
+.toolbar .select { width: auto; flex: 0 0 auto; }
+.toolbar-label { font-size: .82rem; color: var(--ink-faint); }
+
+/* ===== 책 카드 그리드 ===== */
+.book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 18px; }
+
+.book-card {
+  position: relative; background: #fff; border: 1px solid var(--line);
+  border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm);
+  cursor: pointer; transition: transform .12s, box-shadow .12s;
+  display: flex; flex-direction: column;
+}
+.book-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.book-card .spine { position: absolute; left: 0; top: 0; bottom: 0; width: 5px; }
+.book-card.st-want    .spine { background: var(--want); }
+.book-card.st-reading .spine { background: var(--reading); }
+.book-card.st-done    .spine { background: var(--done); }
+
+.book-cover {
+  aspect-ratio: 3 / 4.4; background: var(--paper-2); display: flex;
+  align-items: center; justify-content: center; overflow: hidden;
+}
+.book-cover img { width: 100%; height: 100%; object-fit: cover; }
+.book-cover .no-cover {
+  font-family: var(--serif); color: var(--ink-faint); padding: 12px; text-align: center;
+  font-size: .85rem; line-height: 1.4;
+}
+.book-body { padding: 12px 13px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.book-title { font-family: var(--serif); font-weight: 700; font-size: .98rem; line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.book-author { font-size: .82rem; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.book-meta-row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 4px; }
+
+/* ===== 상태 배지 ===== */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px; font-size: .74rem; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px;
+}
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.badge.st-want    { color: var(--want);    background: #e9eff5; }
+.badge.st-reading { color: var(--reading); background: #f6ecd6; }
+.badge.st-done    { color: var(--done);    background: #e7efe2; }
+
+/* ===== 별점 ===== */
+.stars { display: inline-flex; align-items: center; gap: 1px; line-height: 1; }
+.stars .s { font-size: .95rem; color: var(--line-strong); position: relative; }
+.stars .s.full { color: var(--star); }
+.stars .s.half { color: var(--line-strong); }
+.stars .s.half::before { content: "★"; position: absolute; left: 0; top: 0; width: 50%; overflow: hidden; color: var(--star); }
+.stars.lg .s { font-size: 1.7rem; }
+.rating-num { font-size: .82rem; color: var(--ink-soft); margin-left: 6px; }
+
+/* 클릭 가능한 별점 위젯(상세 화면) */
+.star-input { display: inline-flex; align-items: center; }
+.star-input .star-cell { position: relative; width: 30px; height: 30px; }
+.star-input .star-cell .half-l, .star-input .star-cell .half-r {
+  position: absolute; top: 0; height: 100%; width: 50%; z-index: 2; cursor: pointer;
+}
+.star-input .star-cell .half-l { left: 0; }
+.star-input .star-cell .half-r { right: 0; }
+.star-input .star-cell .star-glyph {
+  position: absolute; inset: 0; font-size: 1.7rem; line-height: 30px; text-align: center; color: var(--line-strong);
+}
+
+/* ===== 빈 상태 ===== */
+.empty {
+  text-align: center; padding: 60px 24px; background: #fff;
+  border: 1px dashed var(--line-strong); border-radius: var(--radius); color: var(--ink-soft);
+}
+.empty .ic { font-size: 2.4rem; }
+.empty h3 { font-size: 1.25rem; margin: 12px 0 6px; }
+.empty p { margin: 0 0 18px; }
+
+/* ===== 검색 결과 행 ===== */
+.result-list { display: flex; flex-direction: column; gap: 12px; }
+.result {
+  display: flex; gap: 14px; background: #fff; border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow-sm);
+}
+.result .thumb { flex: 0 0 64px; width: 64px; aspect-ratio: 3/4.4; background: var(--paper-2);
+  border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.result .thumb .no-cover { font-size: .68rem; color: var(--ink-faint); text-align: center; padding: 4px; }
+.result .info { flex: 1; min-width: 0; }
+.result .info h3 { font-size: 1.05rem; }
+.result .info .by { color: var(--ink-soft); font-size: .88rem; margin: 3px 0; }
+.result .info .pub { color: var(--ink-faint); font-size: .82rem; }
+.result .actions { display: flex; align-items: center; }
+
+/* ===== 책 상세 ===== */
+.detail-top { display: grid; grid-template-columns: 200px 1fr; gap: 30px; margin-bottom: 32px; }
+.detail-cover {
+  width: 200px; aspect-ratio: 3/4.4; border-radius: var(--radius); overflow: hidden;
+  background: var(--paper-2); box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center;
+}
+.detail-cover .no-cover { font-family: var(--serif); color: var(--ink-faint); text-align: center; padding: 18px; }
+.detail-head h1 { font-size: 1.9rem; }
+.detail-head .by { color: var(--ink-soft); font-size: 1.02rem; margin: 8px 0; }
+.detail-head .pub { color: var(--ink-faint); font-size: .88rem; }
+
+.control-card {
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 18px 20px; margin-top: 18px; box-shadow: var(--shadow-sm);
+}
+.control-card h4 { font-size: .82rem; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+.status-pick { display: flex; gap: 8px; flex-wrap: wrap; }
+.status-pick button {
+  border: 1px solid var(--line-strong); background: var(--paper); color: var(--ink-soft);
+  padding: 8px 16px; border-radius: 999px; font-weight: 600; font-size: .9rem; transition: all .15s;
+}
+.status-pick button.active.st-want    { background: var(--want);    border-color: var(--want);    color: #fff; }
+.status-pick button.active.st-reading { background: var(--reading); border-color: var(--reading); color: #fff; }
+.status-pick button.active.st-done    { background: var(--done);    border-color: var(--done);    color: #fff; }
+.date-note { font-size: .82rem; color: var(--ink-soft); margin-top: 12px; display: flex; gap: 18px; flex-wrap: wrap; }
+.date-note span b { color: var(--ink); }
+
+/* 섹션 */
+.section { margin-top: 34px; }
+.section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+  border-bottom: 2px solid var(--ink); padding-bottom: 8px; }
+.section-head h2 { font-size: 1.35rem; }
+.section-head .count { font-size: .85rem; color: var(--ink-faint); }
+
+/* 기록 입력 탭 */
+.entry-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+.entry-tabs button {
+  border: 1px solid var(--line-strong); background: var(--paper); color: var(--ink-soft);
+  padding: 7px 16px; border-radius: 999px; font-weight: 600; font-size: .88rem;
+}
+.entry-tabs button.active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.entry-form { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-sm); }
+.entry-form .row { display: flex; gap: 10px; align-items: flex-start; }
+.entry-form .page-field { flex: 0 0 110px; }
+
+/* 기록 타임라인(메모/인용구 모아보기) */
+.timeline { position: relative; margin-top: 18px; padding-left: 26px; }
+.timeline::before { content: ""; position: absolute; left: 7px; top: 4px; bottom: 4px; width: 2px; background: var(--line); }
+.entry { position: relative; margin-bottom: 18px; }
+.entry::before {
+  content: ""; position: absolute; left: -23px; top: 7px; width: 12px; height: 12px;
+  border-radius: 50%; background: var(--paper); border: 2px solid var(--gold);
+}
+.entry.kind-quote::before { border-color: var(--want); }
+.entry-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow-sm); }
+.entry-card.quote { border-left: 4px solid var(--want); background: #fbfaf7; }
+.entry-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.entry-kind { font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.entry-kind.memo { background: var(--gold-tint); color: var(--gold); }
+.entry-kind.quote { background: #e9eff5; color: var(--want); }
+.entry-date { font-size: .78rem; color: var(--ink-faint); }
+.entry-page { font-size: .78rem; color: var(--want); font-weight: 600; }
+.entry-actions { margin-left: auto; display: flex; gap: 6px; }
+.entry-actions button { background: none; border: none; color: var(--ink-faint); font-size: .8rem; padding: 2px 6px; border-radius: 5px; }
+.entry-actions button:hover { background: var(--paper-2); color: var(--ink); }
+.entry-text { white-space: pre-wrap; }
+.entry.kind-quote .entry-text { font-family: var(--serif); font-size: 1.05rem; }
+.entry.kind-quote .entry-text::before { content: "“"; color: var(--want); font-weight: 700; }
+.entry.kind-quote .entry-text::after { content: "”"; color: var(--want); font-weight: 700; }
+
+/* 감상문 */
+.review-box { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm); }
+.review-display { white-space: pre-wrap; font-family: var(--serif); font-size: 1.05rem; line-height: 1.8; }
+.review-empty { color: var(--ink-faint); }
+
+/* ===== 토스트 ===== */
+.toast-stack { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 60;
+  display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.toast {
+  background: var(--ink); color: var(--paper); padding: 11px 20px; border-radius: 999px;
+  box-shadow: var(--shadow); font-size: .92rem; font-weight: 500; animation: toastIn .25s ease;
+}
+.toast.ok    { background: var(--done); }
+.toast.warn  { background: var(--reading); }
+.toast.err   { background: var(--danger); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== 모달 ===== */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(32,40,58,.45); display: flex;
+  align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+.modal { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); width: min(420px, 92vw); padding: 26px; }
+.modal h3 { font-size: 1.3rem; margin-bottom: 8px; }
+.modal p { color: var(--ink-soft); margin: 0 0 20px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.modal .status-pick { margin: 16px 0 22px; }
+
+/* ===== 푸터 ===== */
+.site-footer { flex-shrink: 0; border-top: 1px solid var(--line); padding: 22px 0; margin-top: 24px; }
+.site-footer p { color: var(--ink-faint); font-size: .82rem; text-align: center; margin: 0; }
+
+/* 로딩 스피너 */
+.spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--line-strong);
+  border-top-color: var(--gold); border-radius: 50%; animation: spin .7s linear infinite; }
+.loading-center { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 50px; color: var(--ink-soft); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-soft); font-size: .9rem; margin-bottom: 18px; }
+.back-link:hover { color: var(--ink); }
+
+/* ===== 반응형 ===== */
+@media (max-width: 720px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .detail-top { grid-template-columns: 1fr; }
+  .detail-cover { width: 150px; }
+  .header-inner { gap: 14px; }
+  .brand-text { display: none; }
+  .user-name { display: none; }
+  .page-head h1 { font-size: 1.6rem; }
+}
+
+/* 접근성: 모션 줄이기 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+
+/* 키보드 포커스 가시성 */
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+
+  </style>
+</head>
+<body>
+<!-- ===== 헤더 (로그인 상태일 때만 내비 노출) ===== -->
+  <header class="site-header" id="siteHeader" hidden>
+    <div class="wrap header-inner">
+      <a class="brand" href="#/library">
+        <span class="brand-mark">❦</span>
+        <span class="brand-text">책갈피</span>
+      </a>
+      <nav class="main-nav" id="mainNav">
+        <a href="#/library" data-nav="library">내 서재</a>
+        <a href="#/search" data-nav="search">책 검색</a>
+      </nav>
+      <div class="header-user">
+        <span class="user-name" id="userName"></span>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">로그아웃</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== 화면이 렌더링되는 영역 ===== -->
+  <main id="view" class="view"></main>
+
+  <!-- ===== 토스트 알림 ===== -->
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <!-- ===== 모달 (확인 / 상태 선택 등) ===== -->
+  <div class="modal-backdrop" id="modalBackdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" id="modal"></div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>책갈피 · 개인 독서 아카이브 데모 — 데이터는 이 브라우저에만 저장됩니다.</p>
+    </div>
+  </footer>
+
+  <!-- 모든 스크립트를 하나로 합침: store → api → auth → app -->
+  <script>
+/* ===== store.js ===== */
+/* =========================================================
+   store.js — 데이터 저장 계층
+   ---------------------------------------------------------
+   GitHub Pages는 정적 호스팅이라 서버/데이터베이스가 없습니다.
+   따라서 모든 데이터를 브라우저의 localStorage에 보관합니다.
+   (= 같은 브라우저에서만 데이터가 유지되며, 기기를 바꾸면 사라집니다.)
+
+   저장 구조
+     readlog_db = {
+       users:     { [email]: { email, nickname, password, createdAt } },
+       libraries: { [email]: [ book, book, ... ] }
+     }
+     readlog_session = "로그인한 사용자의 email"
+   ========================================================= */
+
+const Store = (() => {
+  const DB_KEY = 'readlog_db';
+  const SESSION_KEY = 'readlog_session';
+
+  /* ---------- 내부: DB 읽기/쓰기 ---------- */
+  function loadDB() {
+    try {
+      const raw = localStorage.getItem(DB_KEY);
+      if (!raw) return { users: {}, libraries: {} };
+      const db = JSON.parse(raw);
+      db.users = db.users || {};
+      db.libraries = db.libraries || {};
+      return db;
+    } catch (e) {
+      console.error('DB 로드 실패, 초기화합니다.', e);
+      return { users: {}, libraries: {} };
+    }
+  }
+  function saveDB(db) {
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
+  }
+
+  /* ---------- 유틸 ---------- */
+  function uid() {
+    return 'id_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  // ⚠️ 데모용 간단 해시입니다. 진짜 보안용 암호화가 아닙니다.
+  //    정적 사이트에는 서버가 없어 안전한 인증을 구현할 수 없으므로,
+  //    비밀번호를 평문 그대로 저장하지 않는 최소한의 조치일 뿐입니다.
+  //    실제 서비스에는 반드시 서버 + 안전한 해시(bcrypt 등)를 쓰세요.
+  function pseudoHash(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+      h = (h << 5) - h + str.charCodeAt(i);
+      h |= 0;
+    }
+    return 'h' + (h >>> 0).toString(16) + ':' + str.length;
+  }
+
+  /* ---------- 사용자 ---------- */
+  function getUser(email) {
+    return loadDB().users[email] || null;
+  }
+
+  function createUser({ email, password, nickname }) {
+    const db = loadDB();
+    email = email.trim().toLowerCase();
+    if (db.users[email]) {
+      return { ok: false, error: '이미 가입된 이메일입니다.' };
+    }
+    db.users[email] = {
+      email,
+      nickname: nickname.trim(),
+      password: pseudoHash(password),
+      createdAt: new Date().toISOString(),
+    };
+    db.libraries[email] = [];
+    saveDB(db);
+    return { ok: true, user: db.users[email] };
+  }
+
+  function verifyUser(email, password) {
+    email = email.trim().toLowerCase();
+    const user = getUser(email);
+    if (!user) return { ok: false, error: '가입되지 않은 이메일입니다.' };
+    if (user.password !== pseudoHash(password)) {
+      return { ok: false, error: '비밀번호가 일치하지 않습니다.' };
+    }
+    return { ok: true, user };
+  }
+
+  /* ---------- 세션 ---------- */
+  function setSession(email) { localStorage.setItem(SESSION_KEY, email); }
+  function clearSession() { localStorage.removeItem(SESSION_KEY); }
+  function currentEmail() { return localStorage.getItem(SESSION_KEY); }
+  function currentUser() {
+    const email = currentEmail();
+    return email ? getUser(email) : null;
+  }
+
+  /* ---------- 서재(책 목록) ---------- */
+  function getLibrary() {
+    const email = currentEmail();
+    if (!email) return [];
+    return loadDB().libraries[email] || [];
+  }
+  function saveLibrary(books) {
+    const email = currentEmail();
+    if (!email) return;
+    const db = loadDB();
+    db.libraries[email] = books;
+    saveDB(db);
+  }
+  function getBook(id) {
+    return getLibrary().find(b => b.id === id) || null;
+  }
+
+  // 중복 판정: 같은 Google 볼륨 ID이거나, (제목+저자)가 같으면 중복으로 간주
+  function findDuplicate(candidate) {
+    const norm = s => (s || '').replace(/\s+/g, '').toLowerCase();
+    return getLibrary().find(b => {
+      if (candidate.volumeId && b.volumeId && candidate.volumeId === b.volumeId) return true;
+      return norm(b.title) === norm(candidate.title) &&
+             norm((b.authors || []).join()) === norm((candidate.authors || []).join());
+    }) || null;
+  }
+
+  function addBook(data, status) {
+    const books = getLibrary();
+    const now = new Date().toISOString();
+    const book = {
+      id: uid(),
+      source: data.source || 'manual',
+      volumeId: data.volumeId || null,
+      title: data.title,
+      authors: data.authors || [],
+      publisher: data.publisher || '',
+      publishedDate: data.publishedDate || '',
+      thumbnail: data.thumbnail || '',
+      isbn: data.isbn || '',
+      status: status || 'want',
+      rating: 0,            // 0 = 미평가, 0.5 단위 ~ 5
+      startDate: status === 'reading' ? now : null,   // 읽는 중으로 추가 시 시작일 기록
+      finishDate: status === 'done' ? now : null,     // 완독으로 추가 시 완료일 기록
+      addedAt: now,
+      review: '',           // 감상문(완독 후 긴 글)
+      entries: [],          // 메모/인용구 목록
+    };
+    books.unshift(book);
+    saveLibrary(books);
+    return book;
+  }
+
+  function updateBook(id, patch) {
+    const books = getLibrary();
+    const idx = books.findIndex(b => b.id === id);
+    if (idx === -1) return null;
+    books[idx] = { ...books[idx], ...patch };
+    saveLibrary(books);
+    return books[idx];
+  }
+
+  function removeBook(id) {
+    saveLibrary(getLibrary().filter(b => b.id !== id));
+  }
+
+  /* 상태 변경: 읽는 중 전환 시 시작일, 완독 전환 시 완료일을 (없으면) 기록 */
+  function changeStatus(id, status) {
+    const book = getBook(id);
+    if (!book) return null;
+    const now = new Date().toISOString();
+    const patch = { status };
+    if (status === 'reading' && !book.startDate) patch.startDate = now;
+    if (status === 'done' && !book.finishDate) patch.finishDate = now;
+    return updateBook(id, patch);
+  }
+
+  /* ---------- 기록(메모/인용구) ---------- */
+  function addEntry(bookId, { kind, text, page }) {
+    const book = getBook(bookId);
+    if (!book) return null;
+    const entry = {
+      id: uid(),
+      kind,                       // 'memo' | 'quote'
+      text: text.trim(),
+      page: kind === 'quote' ? (page || '') : '',
+      createdAt: new Date().toISOString(),
+    };
+    const entries = [...(book.entries || []), entry];
+    updateBook(bookId, { entries });
+    return entry;
+  }
+  function updateEntry(bookId, entryId, patch) {
+    const book = getBook(bookId);
+    if (!book) return;
+    const entries = (book.entries || []).map(e => e.id === entryId ? { ...e, ...patch } : e);
+    updateBook(bookId, { entries });
+  }
+  function removeEntry(bookId, entryId) {
+    const book = getBook(bookId);
+    if (!book) return;
+    updateBook(bookId, { entries: (book.entries || []).filter(e => e.id !== entryId) });
+  }
+
+  return {
+    // 사용자/세션
+    getUser, createUser, verifyUser,
+    setSession, clearSession, currentEmail, currentUser,
+    // 서재
+    getLibrary, getBook, findDuplicate, addBook, updateBook, removeBook, changeStatus,
+    // 기록
+    addEntry, updateEntry, removeEntry,
+  };
+})();
+
+
+/* ===== api.js ===== */
+/* =========================================================
+   api.js — 도서 검색 API 계층
+   ---------------------------------------------------------
+   Google Books API를 사용합니다.
+   - 서버 없이 브라우저에서 직접 호출 가능(JavaScript/REST)
+   - 공개 검색은 API 키 없이도 동작(단, 키 없으면 요청 한도가 더 빡빡함)
+     출처: Google for Developers — Books API "Getting Started"
+            https://developers.google.com/books/docs/v1/getting_started
+
+   ※ 한국어 도서 검색 품질을 더 높이고 싶다면 아래 '카카오 책 검색 API'
+     안내(README 참고)를 따라 searchBooks를 교체할 수 있습니다.
+   ========================================================= */
+
+const BookAPI = (() => {
+  const ENDPOINT = 'https://www.googleapis.com/books/v1/volumes';
+
+  // 한 권의 Google 응답을 우리 앱이 쓰는 형태로 정규화
+  function normalize(item) {
+    const v = item.volumeInfo || {};
+    let thumb = '';
+    if (v.imageLinks) {
+      thumb = v.imageLinks.thumbnail || v.imageLinks.smallThumbnail || '';
+      thumb = thumb.replace(/^http:/, 'https:'); // 혼합 콘텐츠 방지
+    }
+    const isbn = (v.industryIdentifiers || [])
+      .filter(x => x.type === 'ISBN_13' || x.type === 'ISBN_10')
+      .map(x => x.identifier)[0] || '';
+
+    return {
+      source: 'google',
+      volumeId: item.id,
+      title: v.title || '(제목 없음)',
+      authors: v.authors || [],
+      publisher: v.publisher || '',
+      publishedDate: v.publishedDate || '',
+      thumbnail: thumb,
+      isbn,
+    };
+  }
+
+  /**
+   * 책 검색
+   * @param {string} query 검색어
+   * @param {number} maxResults 최대 결과 수(기본 20)
+   * @returns {Promise<Array>} 정규화된 도서 배열
+   */
+  async function searchBooks(query, maxResults = 20) {
+    const q = (query || '').trim();
+    if (!q) return [];
+
+    const url = `${ENDPOINT}?q=${encodeURIComponent(q)}` +
+                `&maxResults=${maxResults}&printType=books&langRestrict=ko`;
+
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`검색 요청 실패 (HTTP ${res.status})`);
+    }
+    const data = await res.json();
+    if (!data.items) return [];
+    return data.items.map(normalize);
+  }
+
+  return { searchBooks };
+})();
+
+
+/* ===== auth.js ===== */
+/* =========================================================
+   auth.js — 인증 화면(회원가입 / 로그인 / 로그아웃)
+   ========================================================= */
+
+const Auth = (() => {
+
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  /* 인증 화면 HTML 생성 (mode: 'login' | 'signup') */
+  function render(mode = 'login') {
+    return `
+      <div class="auth-screen wrap">
+        <div class="auth-card">
+          <div class="auth-brand">
+            <div class="brand-mark">❦</div>
+            <h1>책갈피</h1>
+            <p>읽은 책을 한곳에 모아두는 나만의 독서 아카이브</p>
+          </div>
+
+          <div class="auth-tabs">
+            <button data-mode="login"  class="${mode === 'login' ? 'active' : ''}">로그인</button>
+            <button data-mode="signup" class="${mode === 'signup' ? 'active' : ''}">회원가입</button>
+          </div>
+
+          <form id="authForm" novalidate>
+            ${mode === 'signup' ? `
+              <div class="field">
+                <label for="nickname">닉네임</label>
+                <input class="input" id="nickname" type="text" placeholder="서재에 표시될 이름" autocomplete="nickname" />
+                <div class="field-error" data-for="nickname"></div>
+              </div>` : ''}
+
+            <div class="field">
+              <label for="email">이메일</label>
+              <input class="input" id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+              <div class="field-error" data-for="email"></div>
+            </div>
+
+            <div class="field">
+              <label for="password">비밀번호</label>
+              <input class="input" id="password" type="password" placeholder="6자 이상" autocomplete="${mode === 'signup' ? 'new-password' : 'current-password'}" />
+              <div class="field-error" data-for="password"></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+              ${mode === 'signup' ? '계정 만들기' : '로그인'}
+            </button>
+          </form>
+
+          <p class="auth-switch">
+            ${mode === 'signup'
+              ? '이미 계정이 있으신가요? <button data-mode="login">로그인</button>'
+              : '아직 계정이 없으신가요? <button data-mode="signup">회원가입</button>'}
+          </p>
+        </div>
+      </div>`;
+  }
+
+  /* 화면이 그려진 후 이벤트 연결 */
+  function bind(mode, onSuccess) {
+    const root = document.getElementById('view');
+
+    // 탭/전환 버튼
+    root.querySelectorAll('[data-mode]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        root.innerHTML = render(btn.dataset.mode);
+        bind(btn.dataset.mode, onSuccess);
+      });
+    });
+
+    const form = root.querySelector('#authForm');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      clearErrors(root);
+
+      const email = root.querySelector('#email').value.trim();
+      const password = root.querySelector('#password').value;
+      const nickname = mode === 'signup' ? root.querySelector('#nickname').value.trim() : '';
+
+      // ----- 검증 -----
+      let hasError = false;
+      if (mode === 'signup' && nickname.length < 1) {
+        setError(root, 'nickname', '닉네임을 입력해 주세요.'); hasError = true;
+      }
+      if (!isValidEmail(email)) {
+        setError(root, 'email', '올바른 이메일 형식이 아닙니다.'); hasError = true;
+      }
+      if (password.length < 6) {
+        setError(root, 'password', '비밀번호는 6자 이상이어야 합니다.'); hasError = true;
+      }
+      if (hasError) return;
+
+      // ----- 처리 -----
+      if (mode === 'signup') {
+        const r = Store.createUser({ email, password, nickname });
+        if (!r.ok) { setError(root, 'email', r.error); return; }
+        Store.setSession(email);
+        App.toast(`환영합니다, ${nickname}님!`, 'ok');
+        onSuccess();
+      } else {
+        const r = Store.verifyUser(email, password);
+        if (!r.ok) {
+          const field = r.error.includes('비밀번호') ? 'password' : 'email';
+          setError(root, field, r.error);
+          return;
+        }
+        Store.setSession(email);
+        App.toast(`다시 오셨네요, ${r.user.nickname}님!`, 'ok');
+        onSuccess();
+      }
+    });
+  }
+
+  function setError(root, field, msg) {
+    const el = root.querySelector(`.field-error[data-for="${field}"]`);
+    if (el) el.textContent = msg;
+  }
+  function clearErrors(root) {
+    root.querySelectorAll('.field-error').forEach(el => el.textContent = '');
+  }
+
+  return { render, bind, isValidEmail };
+})();
+
+
+/* ===== app.js ===== */
+/* =========================================================
+   app.js — 메인 애플리케이션
+   - 해시(#/...) 기반 라우팅 (GitHub Pages 새로고침/딥링크 호환)
+   - 화면: 내 서재 / 책 검색 / 책 상세
+   ========================================================= */
+
+const App = (() => {
+
+  /* ===================== 공통 유틸 ===================== */
+
+  function $(sel, root = document) { return root.querySelector(sel); }
+  function $all(sel, root = document) { return Array.from(root.querySelectorAll(sel)); }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())}`;
+  }
+  function fmtDateTime(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const p = n => String(n).padStart(2, '0');
+    return `${fmtDate(iso)} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+
+  const STATUS = {
+    want:    { label: '읽고 싶은', cls: 'st-want' },
+    reading: { label: '읽는 중',   cls: 'st-reading' },
+    done:    { label: '완독',      cls: 'st-done' },
+  };
+  function statusBadge(status) {
+    const s = STATUS[status] || STATUS.want;
+    return `<span class="badge ${s.cls}">${s.label}</span>`;
+  }
+
+  // 별점 표시(읽기 전용). rating: 0~5, 0.5 단위
+  function starsHtml(rating, lg = false) {
+    let html = `<span class="stars ${lg ? 'lg' : ''}">`;
+    for (let i = 1; i <= 5; i++) {
+      if (rating >= i)            html += `<span class="s full">★</span>`;
+      else if (rating >= i - 0.5) html += `<span class="s half">★</span>`;
+      else                        html += `<span class="s">★</span>`;
+    }
+    html += `</span>`;
+    if (rating > 0) html += `<span class="rating-num">${rating.toFixed(1)}</span>`;
+    return html;
+  }
+
+  function coverHtml(book, extraClass = '') {
+    if (book.thumbnail) {
+      return `<img src="${escapeHtml(book.thumbnail)}" alt="${escapeHtml(book.title)} 표지"
+                   loading="lazy" onerror="this.parentNode.innerHTML='<div class=&quot;no-cover&quot;>${escapeHtml(book.title)}</div>'" />`;
+    }
+    return `<div class="no-cover">${escapeHtml(book.title)}</div>`;
+  }
+
+  function authorsText(book) {
+    return (book.authors && book.authors.length) ? book.authors.join(', ') : '저자 미상';
+  }
+
+  /* ===================== 토스트 / 모달 ===================== */
+
+  function toast(msg, type = '') {
+    const stack = $('#toastStack');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = msg;
+    stack.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; }, 2200);
+    setTimeout(() => el.remove(), 2600);
+  }
+
+  function openModal(html) {
+    $('#modal').innerHTML = html;
+    $('#modalBackdrop').hidden = false;
+  }
+  function closeModal() {
+    $('#modalBackdrop').hidden = true;
+    $('#modal').innerHTML = '';
+  }
+  // 배경 클릭 시 닫기
+  document.addEventListener('click', (e) => {
+    if (e.target.id === 'modalBackdrop') closeModal();
+  });
+
+  function confirmModal({ title, message, confirmText = '삭제', danger = true }) {
+    return new Promise((resolve) => {
+      openModal(`
+        <h3>${escapeHtml(title)}</h3>
+        <p>${escapeHtml(message)}</p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="mCancel">취소</button>
+          <button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" id="mOk">${escapeHtml(confirmText)}</button>
+        </div>`);
+      $('#mCancel').onclick = () => { closeModal(); resolve(false); };
+      $('#mOk').onclick = () => { closeModal(); resolve(true); };
+    });
+  }
+
+  /* ===================== 라우터 ===================== */
+
+  function navigate(hash) { window.location.hash = hash; }
+
+  function router() {
+    const user = Store.currentUser();
+    const hash = window.location.hash || '#/library';
+
+    // 로그인 안 된 상태 → 인증 화면
+    if (!user) {
+      $('#siteHeader').hidden = true;
+      $('#view').innerHTML = Auth.render('login');
+      Auth.bind('login', () => navigate('#/library') || router());
+      return;
+    }
+
+    // 헤더 표시 + 사용자 이름
+    $('#siteHeader').hidden = false;
+    $('#userName').innerHTML = `<b>${escapeHtml(user.nickname)}</b>님`;
+
+    const [, path, param] = hash.split('/'); // 예: '#/book/id_xxx' → ['#', 'book', 'id_xxx']
+
+    // 내비 활성화 표시
+    $all('#mainNav a').forEach(a => {
+      a.classList.toggle('active', a.dataset.nav === (path || 'library'));
+    });
+
+    if (path === 'search')      renderSearch();
+    else if (path === 'book')   renderDetail(param);
+    else                        renderLibrary();
+
+    window.scrollTo(0, 0);
+  }
+
+  /* ===================== 화면: 내 서재 ===================== */
+
+  // 화면 상태(검색/정렬/필터)는 메모리에 보관
+  let libState = { q: '', sort: 'recent', status: 'all', minRating: 0 };
+
+  function computeStats(books) {
+    const rated = books.filter(b => b.rating > 0);
+    const avg = rated.length ? (rated.reduce((s, b) => s + b.rating, 0) / rated.length) : 0;
+    const thisYear = new Date().getFullYear();
+    const doneThisYear = books.filter(b =>
+      b.status === 'done' && b.finishDate && new Date(b.finishDate).getFullYear() === thisYear).length;
+    return {
+      total: books.length,
+      want: books.filter(b => b.status === 'want').length,
+      reading: books.filter(b => b.status === 'reading').length,
+      done: books.filter(b => b.status === 'done').length,
+      avg, doneThisYear,
+    };
+  }
+
+  function applyFilters(books) {
+    const norm = s => (s || '').toLowerCase();
+    let list = books.slice();
+
+    if (libState.status !== 'all') list = list.filter(b => b.status === libState.status);
+    if (libState.minRating > 0)    list = list.filter(b => b.rating >= libState.minRating);
+    if (libState.q.trim()) {
+      const q = norm(libState.q);
+      list = list.filter(b =>
+        norm(b.title).includes(q) || norm(authorsText(b)).includes(q));
+    }
+
+    if (libState.sort === 'recent')      list.sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
+    else if (libState.sort === 'rating') list.sort((a, b) => b.rating - a.rating);
+    else if (libState.sort === 'title')  list.sort((a, b) => a.title.localeCompare(b.title, 'ko'));
+
+    return list;
+  }
+
+  function renderLibrary() {
+    const books = Store.getLibrary();
+    const st = computeStats(books);
+
+    const headHtml = `
+      <div class="page-head">
+        <div class="eyebrow">My Library</div>
+        <h1>내 서재</h1>
+        <p>지금까지 ${st.total}권을 기록했어요.</p>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="num">${st.total}</div><div class="lbl">전체</div></div>
+        <div class="stat s-want"><div class="num">${st.want}</div><div class="lbl">읽고 싶은</div></div>
+        <div class="stat s-reading"><div class="num">${st.reading}</div><div class="lbl">읽는 중</div></div>
+        <div class="stat s-done"><div class="num">${st.done}</div><div class="lbl">완독 (올해 ${st.doneThisYear})</div></div>
+        <div class="stat s-star"><div class="num">${st.avg ? st.avg.toFixed(1) : '–'}</div><div class="lbl">평균 별점</div></div>
+      </div>`;
+
+    if (books.length === 0) {
+      $('#view').innerHTML = `<div class="wrap">${headHtml}
+        <div class="empty">
+          <div class="ic">📚</div>
+          <h3>아직 서재가 비어 있어요</h3>
+          <p>책을 검색해서 첫 번째 책을 추가해 보세요.</p>
+          <a class="btn btn-primary" href="#/search">책 검색하러 가기</a>
+        </div></div>`;
+      return;
+    }
+
+    const toolbar = `
+      <div class="toolbar">
+        <div class="search-box">
+          <input class="input" id="libSearch" type="search" placeholder="내 서재에서 제목·저자 검색" value="${escapeHtml(libState.q)}" />
+        </div>
+        <span class="toolbar-label">정렬</span>
+        <select class="select" id="libSort">
+          <option value="recent" ${libState.sort==='recent'?'selected':''}>최근 추가순</option>
+          <option value="rating" ${libState.sort==='rating'?'selected':''}>별점 높은순</option>
+          <option value="title"  ${libState.sort==='title' ?'selected':''}>제목 가나다순</option>
+        </select>
+        <span class="toolbar-label">상태</span>
+        <select class="select" id="libStatus">
+          <option value="all"     ${libState.status==='all'?'selected':''}>전체</option>
+          <option value="want"    ${libState.status==='want'?'selected':''}>읽고 싶은</option>
+          <option value="reading" ${libState.status==='reading'?'selected':''}>읽는 중</option>
+          <option value="done"    ${libState.status==='done'?'selected':''}>완독</option>
+        </select>
+        <span class="toolbar-label">별점</span>
+        <select class="select" id="libRating">
+          <option value="0" ${libState.minRating===0?'selected':''}>전체</option>
+          <option value="4" ${libState.minRating===4?'selected':''}>★ 4 이상</option>
+          <option value="3" ${libState.minRating===3?'selected':''}>★ 3 이상</option>
+          <option value="2" ${libState.minRating===2?'selected':''}>★ 2 이상</option>
+        </select>
+      </div>`;
+
+    const list = applyFilters(books);
+    const gridHtml = list.length
+      ? `<div class="book-grid">${list.map(bookCardHtml).join('')}</div>`
+      : `<div class="empty"><div class="ic">🔍</div><h3>조건에 맞는 책이 없어요</h3><p>검색어나 필터를 바꿔 보세요.</p></div>`;
+
+    $('#view').innerHTML = `<div class="wrap">${headHtml}${toolbar}${gridHtml}</div>`;
+
+    // 이벤트
+    let t;
+    $('#libSearch').addEventListener('input', (e) => {
+      clearTimeout(t);
+      t = setTimeout(() => { libState.q = e.target.value; refreshLibraryGrid(); }, 200);
+    });
+    $('#libSort').addEventListener('change', e => { libState.sort = e.target.value; refreshLibraryGrid(); });
+    $('#libStatus').addEventListener('change', e => { libState.status = e.target.value; refreshLibraryGrid(); });
+    $('#libRating').addEventListener('change', e => { libState.minRating = Number(e.target.value); refreshLibraryGrid(); });
+
+    bindCardClicks();
+  }
+
+  // 그리드만 다시 그려서 입력 포커스 유지
+  function refreshLibraryGrid() {
+    const list = applyFilters(Store.getLibrary());
+    const wrap = $('#view .wrap');
+    let grid = wrap.querySelector('.book-grid') || wrap.querySelector('.empty:last-child');
+    const newHtml = list.length
+      ? `<div class="book-grid">${list.map(bookCardHtml).join('')}</div>`
+      : `<div class="empty"><div class="ic">🔍</div><h3>조건에 맞는 책이 없어요</h3><p>검색어나 필터를 바꿔 보세요.</p></div>`;
+    grid.outerHTML = newHtml;
+    bindCardClicks();
+  }
+
+  function bookCardHtml(book) {
+    return `
+      <article class="book-card ${STATUS[book.status].cls}" data-id="${book.id}" tabindex="0" role="button">
+        <span class="spine"></span>
+        <div class="book-cover">${coverHtml(book)}</div>
+        <div class="book-body">
+          <div class="book-title">${escapeHtml(book.title)}</div>
+          <div class="book-author">${escapeHtml(authorsText(book))}</div>
+          <div class="book-meta-row">
+            ${statusBadge(book.status)}
+            ${book.rating > 0 ? starsHtml(book.rating) : ''}
+          </div>
+        </div>
+      </article>`;
+  }
+
+  function bindCardClicks() {
+    $all('.book-card').forEach(card => {
+      const go = () => navigate('#/book/' + card.dataset.id);
+      card.addEventListener('click', go);
+      card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+    });
+  }
+
+  /* ===================== 화면: 책 검색 ===================== */
+
+  let searchState = { results: [], lastQuery: '' };
+
+  function renderSearch() {
+    $('#view').innerHTML = `
+      <div class="wrap">
+        <div class="page-head">
+          <div class="eyebrow">Find a book</div>
+          <h1>책 검색</h1>
+          <p>제목·저자·키워드로 검색해 서재에 담아 보세요.</p>
+        </div>
+
+        <div class="toolbar">
+          <div class="search-box">
+            <input class="input" id="searchInput" type="search" placeholder="예) 데미안, 김초엽, 정세랑…" value="${escapeHtml(searchState.lastQuery)}" />
+          </div>
+          <button class="btn btn-primary" id="searchBtn">검색</button>
+          <button class="btn btn-ghost" id="manualBtn">직접 추가</button>
+        </div>
+
+        <div id="searchResults">${searchState.results.length ? resultsHtml(searchState.results) : ''}</div>
+      </div>`;
+
+    const input = $('#searchInput');
+    const doSearch = () => runSearch(input.value);
+    $('#searchBtn').addEventListener('click', doSearch);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+    $('#manualBtn').addEventListener('click', openManualAdd);
+    input.focus();
+    if (searchState.results.length) bindResultActions();
+  }
+
+  async function runSearch(query) {
+    const q = (query || '').trim();
+    if (!q) { toast('검색어를 입력해 주세요.', 'warn'); return; }
+    searchState.lastQuery = q;
+    const box = $('#searchResults');
+    box.innerHTML = `<div class="loading-center"><span class="spinner"></span> 검색 중…</div>`;
+    try {
+      const results = await BookAPI.searchBooks(q);
+      searchState.results = results;
+      if (results.length === 0) {
+        box.innerHTML = `<div class="empty"><div class="ic">🤔</div>
+          <h3>'${escapeHtml(q)}' 검색 결과가 없어요</h3>
+          <p>다른 검색어로 시도하거나, 직접 추가로 책을 등록할 수 있어요.</p>
+          <button class="btn btn-ghost" id="manualBtn2">직접 추가</button></div>`;
+        $('#manualBtn2').addEventListener('click', openManualAdd);
+        return;
+      }
+      box.innerHTML = resultsHtml(results);
+      bindResultActions();
+    } catch (err) {
+      console.error(err);
+      box.innerHTML = `<div class="empty"><div class="ic">⚠️</div>
+        <h3>검색 중 문제가 발생했어요</h3>
+        <p>잠시 후 다시 시도해 주세요. (네트워크 또는 API 요청 한도)</p></div>`;
+    }
+  }
+
+  function resultsHtml(results) {
+    return `<div class="result-list">${results.map((b, i) => `
+      <div class="result" data-idx="${i}">
+        <div class="thumb">${b.thumbnail
+          ? `<img src="${escapeHtml(b.thumbnail)}" alt="" loading="lazy" />`
+          : `<div class="no-cover">${escapeHtml(b.title)}</div>`}</div>
+        <div class="info">
+          <h3>${escapeHtml(b.title)}</h3>
+          <div class="by">${escapeHtml(b.authors.length ? b.authors.join(', ') : '저자 미상')}</div>
+          <div class="pub">${escapeHtml([b.publisher, b.publishedDate].filter(Boolean).join(' · '))}</div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary btn-sm" data-add="${i}">＋ 서재에 추가</button>
+        </div>
+      </div>`).join('')}</div>`;
+  }
+
+  function bindResultActions() {
+    $all('[data-add]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const book = searchState.results[Number(btn.dataset.add)];
+        askStatusAndAdd(book);
+      });
+    });
+  }
+
+  // 상태를 고른 뒤 서재에 추가(중복 확인 포함)
+  function askStatusAndAdd(candidate) {
+    const dup = Store.findDuplicate(candidate);
+    if (dup) {
+      toast('이미 서재에 담긴 책이에요.', 'warn');
+      return;
+    }
+    openModal(`
+      <h3>서재에 추가</h3>
+      <p>'${escapeHtml(candidate.title)}'을(를) 어떤 상태로 담을까요?</p>
+      <div class="status-pick" id="addStatus">
+        <button data-st="want"    class="st-want">읽고 싶은</button>
+        <button data-st="reading" class="st-reading">읽는 중</button>
+        <button data-st="done"    class="st-done">완독</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="mCancel">취소</button>
+      </div>`);
+    $('#mCancel').onclick = closeModal;
+    $all('#addStatus button').forEach(b => {
+      b.onclick = () => {
+        Store.addBook(candidate, b.dataset.st);
+        closeModal();
+        toast(`'${candidate.title}'을(를) 서재에 담았어요.`, 'ok');
+      };
+    });
+  }
+
+  // API에 없는 책: 직접 추가
+  function openManualAdd() {
+    openModal(`
+      <h3>책 직접 추가</h3>
+      <p>검색에 없는 책을 직접 입력해 등록할 수 있어요.</p>
+      <div class="field">
+        <label for="mTitle">제목 *</label>
+        <input class="input" id="mTitle" type="text" placeholder="책 제목" />
+        <div class="field-error" data-for="mTitle"></div>
+      </div>
+      <div class="field">
+        <label for="mAuthor">저자</label>
+        <input class="input" id="mAuthor" type="text" placeholder="쉼표로 여러 명 입력 가능" />
+      </div>
+      <div class="field">
+        <label for="mPublisher">출판사 (선택)</label>
+        <input class="input" id="mPublisher" type="text" />
+      </div>
+      <div class="field">
+        <label>초기 상태</label>
+        <div class="status-pick" id="mStatus">
+          <button type="button" data-st="want"    class="st-want active">읽고 싶은</button>
+          <button type="button" data-st="reading" class="st-reading">읽는 중</button>
+          <button type="button" data-st="done"    class="st-done">완독</button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="mCancel">취소</button>
+        <button class="btn btn-primary" id="mSave">추가하기</button>
+      </div>`);
+
+    let chosen = 'want';
+    $all('#mStatus button').forEach(b => b.onclick = () => {
+      chosen = b.dataset.st;
+      $all('#mStatus button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+    });
+    $('#mCancel').onclick = closeModal;
+    $('#mSave').onclick = () => {
+      const title = $('#mTitle').value.trim();
+      if (!title) { $('.field-error[data-for="mTitle"]').textContent = '제목은 필수입니다.'; return; }
+      const authors = $('#mAuthor').value.split(',').map(s => s.trim()).filter(Boolean);
+      const candidate = { source: 'manual', title, authors, publisher: $('#mPublisher').value.trim() };
+      const dup = Store.findDuplicate(candidate);
+      if (dup) { $('.field-error[data-for="mTitle"]').textContent = '이미 서재에 있는 책이에요.'; return; }
+      Store.addBook(candidate, chosen);
+      closeModal();
+      toast(`'${title}'을(를) 서재에 담았어요.`, 'ok');
+    };
+  }
+
+  /* ===================== 화면: 책 상세 ===================== */
+
+  let entryTab = 'memo'; // 'memo' | 'quote'
+
+  function renderDetail(id) {
+    const book = Store.getBook(id);
+    if (!book) {
+      $('#view').innerHTML = `<div class="wrap"><div class="empty"><div class="ic">❓</div>
+        <h3>책을 찾을 수 없어요</h3><a class="btn btn-ghost" href="#/library">내 서재로</a></div></div>`;
+      return;
+    }
+
+    const entries = (book.entries || []).slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+    $('#view').innerHTML = `
+      <div class="wrap">
+        <a class="back-link" href="#/library">← 내 서재</a>
+
+        <div class="detail-top">
+          <div class="detail-cover">${coverHtml(book)}</div>
+          <div class="detail-head">
+            ${statusBadge(book.status)}
+            <h1>${escapeHtml(book.title)}</h1>
+            <div class="by">${escapeHtml(authorsText(book))}</div>
+            <div class="pub">${escapeHtml([book.publisher, book.publishedDate].filter(Boolean).join(' · '))}</div>
+
+            <div class="control-card">
+              <h4>독서 상태</h4>
+              <div class="status-pick" id="statusPick">
+                <button data-st="want"    class="st-want ${book.status==='want'?'active':''}">읽고 싶은</button>
+                <button data-st="reading" class="st-reading ${book.status==='reading'?'active':''}">읽는 중</button>
+                <button data-st="done"    class="st-done ${book.status==='done'?'active':''}">완독</button>
+              </div>
+              <div class="date-note">
+                <span>시작일 <b>${book.startDate ? fmtDate(book.startDate) : '–'}</b></span>
+                <span>완료일 <b>${book.finishDate ? fmtDate(book.finishDate) : '–'}</b></span>
+                <span>추가일 <b>${fmtDate(book.addedAt)}</b></span>
+              </div>
+            </div>
+
+            <div class="control-card">
+              <h4>별점</h4>
+              <div id="starInput">${starInputHtml(book.rating)}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 감상문 -->
+        <section class="section">
+          <div class="section-head">
+            <h2>감상문</h2>
+            <button class="btn btn-ghost btn-sm" id="editReview">${book.review ? '수정' : '작성'}</button>
+          </div>
+          <div class="review-box" id="reviewBox">
+            ${book.review
+              ? `<div class="review-display">${escapeHtml(book.review)}</div>`
+              : `<div class="review-empty">완독 후의 긴 감상을 남겨 보세요.</div>`}
+          </div>
+        </section>
+
+        <!-- 메모 & 인용구 -->
+        <section class="section">
+          <div class="section-head">
+            <h2>메모 &amp; 인용구</h2>
+            <span class="count">${entries.length}개</span>
+          </div>
+
+          <div class="entry-tabs" id="entryTabs">
+            <button data-tab="memo"  class="${entryTab==='memo'?'active':''}">메모</button>
+            <button data-tab="quote" class="${entryTab==='quote'?'active':''}">인용구</button>
+          </div>
+          <div class="entry-form" id="entryForm">${entryFormHtml(entryTab)}</div>
+
+          <div id="timeline">${timelineHtml(entries)}</div>
+        </section>
+
+        <section class="section">
+          <button class="btn btn-danger" id="deleteBook">이 책을 서재에서 삭제</button>
+        </section>
+      </div>`;
+
+    bindDetailEvents(book);
+  }
+
+  // 클릭 가능한 별점 위젯
+  function starInputHtml(rating) {
+    return `
+      <div class="star-input">${starInputCellsHtml(rating)}</div>
+      <span class="rating-num" id="ratingNum">${rating > 0 ? rating.toFixed(1) + '점' : '미평가'}</span>
+      ${rating > 0 ? `<button class="btn btn-ghost btn-sm" id="clearRating" style="margin-left:10px">평가 취소</button>` : ''}`;
+  }
+  // 별 5칸 렌더(반쪽 클릭 영역 포함)
+  function starInputCellsHtml(rating) {
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+      const color =
+        rating >= i ? 'var(--star)' :
+        rating >= i - 0.5 ? 'transparent' : 'var(--line-strong)';
+      const half = rating >= i - 0.5 && rating < i;
+      html += `
+        <span class="star-cell" data-i="${i}">
+          <span class="star-glyph" style="color:${color}">★</span>
+          ${half ? `<span class="star-glyph" style="color:var(--star);clip-path:inset(0 50% 0 0)">★</span>` : ''}
+          <span class="half-l" data-val="${(i - 0.5)}"></span>
+          <span class="half-r" data-val="${i}"></span>
+        </span>`;
+    }
+    return html;
+  }
+
+  function entryFormHtml(tab) {
+    if (tab === 'quote') {
+      return `
+        <div class="row">
+          <textarea class="textarea" id="entryText" placeholder="기억하고 싶은 문장을 적어 주세요"></textarea>
+          <div class="page-field">
+            <input class="input" id="entryPage" type="text" inputmode="numeric" placeholder="쪽수" />
+          </div>
+        </div>
+        <div style="margin-top:10px;text-align:right">
+          <button class="btn btn-primary btn-sm" id="addEntryBtn">인용구 저장</button>
+        </div>`;
+    }
+    return `
+      <textarea class="textarea" id="entryText" placeholder="떠오른 생각이나 메모를 남겨 보세요 (작성일은 자동 기록됩니다)"></textarea>
+      <div style="margin-top:10px;text-align:right">
+        <button class="btn btn-primary btn-sm" id="addEntryBtn">메모 저장</button>
+      </div>`;
+  }
+
+  function timelineHtml(entries) {
+    if (!entries.length) {
+      return `<div class="empty" style="margin-top:16px"><div class="ic">✍️</div>
+        <h3>아직 기록이 없어요</h3><p>첫 메모나 인용구를 남겨 보세요.</p></div>`;
+    }
+    return `<div class="timeline">${entries.map(e => `
+      <div class="entry kind-${e.kind}" data-eid="${e.id}">
+        <div class="entry-card ${e.kind === 'quote' ? 'quote' : ''}">
+          <div class="entry-meta">
+            <span class="entry-kind ${e.kind}">${e.kind === 'quote' ? '인용구' : '메모'}</span>
+            ${e.kind === 'quote' && e.page ? `<span class="entry-page">p.${escapeHtml(e.page)}</span>` : ''}
+            <span class="entry-date">${fmtDateTime(e.createdAt)}</span>
+            <span class="entry-actions">
+              <button data-edit="${e.id}">수정</button>
+              <button data-del="${e.id}">삭제</button>
+            </span>
+          </div>
+          <div class="entry-text">${escapeHtml(e.text)}</div>
+        </div>
+      </div>`).join('')}</div>`;
+  }
+
+  function bindDetailEvents(book) {
+    // 상태 변경
+    $all('#statusPick button').forEach(b => b.onclick = () => {
+      Store.changeStatus(book.id, b.dataset.st);
+      toast(`상태를 '${STATUS[b.dataset.st].label}'(으)로 바꿨어요.`, 'ok');
+      renderDetail(book.id);
+    });
+
+    // 별점(반쪽 단위)
+    bindStarInput(book);
+
+    // 감상문 편집
+    $('#editReview').onclick = () => openReviewEditor(book);
+
+    // 기록 탭 전환
+    $all('#entryTabs button').forEach(b => b.onclick = () => {
+      entryTab = b.dataset.tab;
+      $all('#entryTabs button').forEach(x => x.classList.toggle('active', x === b));
+      $('#entryForm').innerHTML = entryFormHtml(entryTab);
+      bindEntryForm(book);
+    });
+    bindEntryForm(book);
+
+    // 기록 수정/삭제
+    bindTimeline(book);
+
+    // 책 삭제
+    $('#deleteBook').onclick = async () => {
+      const ok = await confirmModal({
+        title: '책 삭제',
+        message: `'${book.title}'을(를) 서재에서 삭제할까요? 작성한 메모와 감상문도 함께 사라집니다.`,
+        confirmText: '삭제',
+      });
+      if (ok) { Store.removeBook(book.id); toast('서재에서 삭제했어요.', 'ok'); navigate('#/library'); }
+    };
+  }
+
+  function bindStarInput(book) {
+    const wrap = $('#starInput');
+    function rebind() {
+      $all('#starInput .half-l, #starInput .half-r').forEach(half => {
+        half.onclick = () => {
+          const val = Number(half.dataset.val);
+          Store.updateBook(book.id, { rating: val });
+          book.rating = val;
+          wrap.innerHTML = starInputHtml(val);
+          rebind();
+          const cl = $('#clearRating'); if (cl) cl.onclick = clear;
+          toast(`별점 ${val.toFixed(1)}점`, 'ok');
+        };
+      });
+    }
+    function clear() {
+      Store.updateBook(book.id, { rating: 0 });
+      book.rating = 0;
+      wrap.innerHTML = starInputHtml(0);
+      rebind();
+    }
+    rebind();
+    const cl = $('#clearRating'); if (cl) cl.onclick = clear;
+  }
+
+  function bindEntryForm(book) {
+    const btn = $('#addEntryBtn');
+    if (!btn) return;
+    btn.onclick = () => {
+      const text = $('#entryText').value.trim();
+      if (!text) { toast('내용을 입력해 주세요.', 'warn'); return; }
+      const page = entryTab === 'quote' ? ($('#entryPage') ? $('#entryPage').value.trim() : '') : '';
+      Store.addEntry(book.id, { kind: entryTab, text, page });
+      toast(entryTab === 'quote' ? '인용구를 저장했어요.' : '메모를 저장했어요.', 'ok');
+      // 타임라인만 갱신
+      const updated = Store.getBook(book.id);
+      const entries = (updated.entries || []).slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      $('#timeline').innerHTML = timelineHtml(entries);
+      $('.section .count').textContent = entries.length + '개';
+      $('#entryForm').innerHTML = entryFormHtml(entryTab);
+      bindEntryForm(book);
+      bindTimeline(book);
+    };
+  }
+
+  function bindTimeline(book) {
+    $all('[data-del]').forEach(b => b.onclick = async () => {
+      const ok = await confirmModal({ title: '기록 삭제', message: '이 기록을 삭제할까요?', confirmText: '삭제' });
+      if (!ok) return;
+      Store.removeEntry(book.id, b.dataset.del);
+      refreshTimeline(book);
+      toast('삭제했어요.', 'ok');
+    });
+    $all('[data-edit]').forEach(b => b.onclick = () => openEntryEditor(book, b.dataset.edit));
+  }
+
+  function refreshTimeline(book) {
+    const updated = Store.getBook(book.id);
+    const entries = (updated.entries || []).slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    $('#timeline').innerHTML = timelineHtml(entries);
+    const cnt = $('.section .count'); if (cnt) cnt.textContent = entries.length + '개';
+    bindTimeline(book);
+  }
+
+  function openEntryEditor(book, entryId) {
+    const entry = (Store.getBook(book.id).entries || []).find(e => e.id === entryId);
+    if (!entry) return;
+    openModal(`
+      <h3>${entry.kind === 'quote' ? '인용구' : '메모'} 수정</h3>
+      <div class="field">
+        <textarea class="textarea" id="editText">${escapeHtml(entry.text)}</textarea>
+      </div>
+      ${entry.kind === 'quote' ? `
+        <div class="field">
+          <label for="editPage">쪽수</label>
+          <input class="input" id="editPage" type="text" value="${escapeHtml(entry.page)}" />
+        </div>` : ''}
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="mCancel">취소</button>
+        <button class="btn btn-primary" id="mSave">저장</button>
+      </div>`);
+    $('#mCancel').onclick = closeModal;
+    $('#mSave').onclick = () => {
+      const text = $('#editText').value.trim();
+      if (!text) { toast('내용을 입력해 주세요.', 'warn'); return; }
+      const patch = { text };
+      if (entry.kind === 'quote') patch.page = $('#editPage').value.trim();
+      Store.updateEntry(book.id, entryId, patch);
+      closeModal();
+      refreshTimeline(book);
+      toast('수정했어요.', 'ok');
+    };
+  }
+
+  function openReviewEditor(book) {
+    openModal(`
+      <h3>감상문 ${book.review ? '수정' : '작성'}</h3>
+      <div class="field">
+        <textarea class="textarea" id="reviewText" style="min-height:200px" placeholder="이 책을 읽고 느낀 점을 자유롭게 적어 보세요.">${escapeHtml(book.review)}</textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="mCancel">취소</button>
+        <button class="btn btn-primary" id="mSave">저장</button>
+      </div>`);
+    $('#mCancel').onclick = closeModal;
+    $('#mSave').onclick = () => {
+      const review = $('#reviewText').value.trim();
+      Store.updateBook(book.id, { review });
+      closeModal();
+      toast('감상문을 저장했어요.', 'ok');
+      renderDetail(book.id);
+    };
+  }
+
+  /* ===================== 로그아웃 / 초기화 ===================== */
+
+  function bindGlobal() {
+    $('#logoutBtn').addEventListener('click', () => {
+      Store.clearSession();
+      toast('로그아웃 되었습니다.', 'ok');
+      navigate('#/library');
+      router();
+    });
+  }
+
+  /* ===================== 부팅 ===================== */
+
+  function init() {
+    bindGlobal();
+    window.addEventListener('hashchange', router);
+    router();
+  }
+
+  return { init, toast, navigate };
+})();
+
+document.addEventListener('DOMContentLoaded', App.init);
+
+  </script>
+</body>
+</html>
